@@ -1,5 +1,5 @@
-# from xml.dom import minidom
 import questionary
+import json
 
 # skoro mowa o dictach, bardzo możliwe że całe to gówno w sensie cały ten skrypt można by zrobić w ramach jednego
 # https://questionary.readthedocs.io/en/stable/pages/advanced.html#a-complex-example-using-a-dictionary-configuration
@@ -7,8 +7,7 @@ char = {
     'name': '',
     'gender': '',
     'race': '',
-    'elf_type': '',
-    'culture': '',
+    'background': '',
     'concept': '',
     'advantages': [],
     'disadvantages': [],
@@ -41,6 +40,7 @@ char['gender'] = questionary.select(
 
         ]).ask()
 
+# te checki mozna zrobic jakimis prostymi zmiennymi
 if char['gender'] == 'kobieta':
     gendered_verbs = 'a'
 elif char['gender'] != 'mężczyzna':
@@ -63,7 +63,7 @@ char['race'] = questionary.select(
         ]).ask()
 
 if char['race'] == 'elf':
-    char['elf_type'] = questionary.select(
+    char['race'] = questionary.select(
             "Nie wszystkie elfy są równe. Do którego z elfich klanów przynależy " + char['name'] + "?",
 
             choices=[
@@ -74,14 +74,34 @@ if char['race'] == 'elf':
                 char['name'] + ' jest elfem potwornym'
 
             ]).ask()
-elif char['race'][-1] != 'd' or char['elf_type'][-1] == 'm':
-    char['culture'] = questionary.select(
-            "Z kulturą której z poniższych krain " + char['name'] + " jest najbardziej obeznan" + gendered_verbs + "?",
+
+# ten check rowniez moznaby zrobic jakos kompletnie zasadniczo inaczej
+elif char['race'][-1] != 'd' and len(char['race']) < 12:
+    char['background'] = questionary.select(
+            "Z kulturą której z poniższych krain i organizacji " + char['name'] + " jest najbardziej obeznan" + gendered_verbs + "?",
 
             choices=[
-                # do wypełnienia
-
+                'Republika Burali',
+                'Gildia',
+                'Cesarstwo Egayi',
+                'Akademia Egayska',
+                'Ostrza',
+                'Karmazynowi Maruderzy'
             ]).ask()
+
+elif char['race'] == 'leonid':
+    char['background'] = questionary.select(
+            "Leonidzi miewają zgoła odmienne role społeczne. " + char['name'] + " to:",
+
+            choices=[
+                'niewolnik w Burali',
+                'niewolnik na Leonterze',
+                'członek jednego z wolnych plemion Leontery',
+                'członek Karmazynowych Maruderów'
+            ]).ask()
+
+else:
+    char['background'] = 'Plemiona Niezbadanej Dziczy'
 
 char['concept'] = questionary.text(
         "Teraz opisz mi w jednym albo kilku słowach, kim jest " + char['name'] + ":",
@@ -108,7 +128,7 @@ for i in range(3):
 for i in range(2):
 
     a = questionary.text(
-        "Teraz dwie wady. (" + str(i + 1) + "/3)",
+        "Teraz dwie wady. (" + str(i + 1) + "/2)",
 
         validate=lambda text: True
         if len(text) > 0
@@ -119,4 +139,7 @@ for i in range(2):
     char['disadvantages'].append(a)
 
 
-print(char)
+with open(char['name'] + ".json", "w", encoding="utf-8") as out_file:
+    json.dump(char, out_file, indent=4, ensure_ascii=False)
+
+print('Wygenerowano ' + char['name'] + ".json")
